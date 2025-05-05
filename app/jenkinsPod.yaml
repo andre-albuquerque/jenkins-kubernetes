@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: jenkins
+spec:
+  serviceAccountName: jenkins-ci
+  containers:
+  - name: python
+    image: python:3.9.13-alpine3.16
+    command:
+    - sleep
+    args:
+    - infinity
+  - name: sonar-scanner-cli
+    image: sonarsource/sonar-scanner-cli:5.0.1
+    command:
+    - sleep
+    args:
+    - infinity
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - sleep
+    args:
+    - infinity
+    resources:
+        limits:
+          memory: 500Mi
+          ephemeral-storage: "2Gi"
+    volumeMounts:
+      - name: harbor-credentials
+        mountPath: /kaniko/.docker
+      - name: jenkins-artifacts
+        mountPath: /artifacts
+  - name: alpine
+    image: alpine
+    command:
+    - sleep
+    args:
+    - infinity
+    volumeMounts:
+      - name: jenkins-artifacts
+        mountPath: /artifacts
+  - name: kaniko-crane
+    image: gcr.io/go-containerregistry/crane:debug
+    command:
+    - sleep
+    args:
+    - infinity
+    resources:
+        limits:
+          memory: 500Mi
+          ephemeral-storage: "2Gi"
+    volumeMounts:
+      - name: harbor-credentials
+        mountPath: /root/.docker/config.json
+        subPath: config.json
+      - name: jenkins-artifacts
+        mountPath: /artifacts
+  - name: helm
+    image: alpine/helm:3.17.1
+    command:
+    - sleep
+    args:
+    - infinity
+    resources:
+        limits:
+          memory: 500Mi
+          ephemeral-storage: "2Gi"
+    volumeMounts:
+      - name: jenkins-artifacts
+        mountPath: /artifacts
+  hostAliases:
+  - ip: "172.18.0.50"
+    hostnames:
+    - "gitea.localhost.com"
+    - "harbor.localhost.com"
+    - "sonarqube.localhost.com"
+  volumes:
+    - name: harbor-credentials
+      secret:
+        secretName: harbor-credentials
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+    - name: jenkins-artifacts
+      persistentVolumeClaim:
+        claimName: jenkins-artifacts

@@ -1,0 +1,35 @@
+replicaCount: 1
+
+appPort: 5000
+
+image:
+  repository: harbor.localhost.com/andrealbuquerqueme/restapi-flask
+  tag: 0.0.0
+
+environmentVariables:
+  - name: MONGODB_DB
+    value: api
+  - name: MONGODB_HOST
+    value: flask-ci-mongodb
+  - name: MONGODB_USERNAME
+    value: api
+  - name: MONGODB_PASSWORD
+    value: api
+
+livenessProbe: {}
+
+readinessProbe: {}
+
+ingress:
+  enabled: false
+
+mongodb:
+  auth:
+    usernames:
+      - api
+    passwords:
+      - api
+    databases:
+      - api
+
+imagePullSecrets: harbor-credentials
